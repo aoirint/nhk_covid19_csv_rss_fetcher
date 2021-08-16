@@ -1,6 +1,7 @@
 /data/
 *.csv
 *.xml
+/.env*
 
 __pycache__/
 .mypy_cache/
