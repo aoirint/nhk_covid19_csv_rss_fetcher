@@ -4,7 +4,11 @@ import requests
 from datetime import datetime as dt
 import subprocess
 
+import logging
+logger = logging.getLogger(__name__)
+
 def fetch_nhk_covid_daily():
+    logger.info(dt.now().isoformat())
     NHK_CSV_URL = 'https://www3.nhk.or.jp/n-data/opendata/coronavirus/nhk_news_covid19_prefectures_daily_data.csv'
 
     res = requests.get(NHK_CSV_URL, timeout=10)
@@ -33,6 +37,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--schedule', action='store_true')
     args = parser.parse_args()
+
+    logging.basicConfig(level=logging.INFO)
 
     if not args.schedule:
         fetch_nhk_covid_daily()
