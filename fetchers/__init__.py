@@ -1,0 +1,1 @@
+from .nhk_covid_daily import NhkCovidDailyFetcher
