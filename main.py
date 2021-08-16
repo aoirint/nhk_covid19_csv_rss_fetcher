@@ -1,42 +1,31 @@
-from dataclasses import dataclass
-import pandas as pd
-from io import StringIO
+import os
 from pathlib import Path
-# from datetime import datetime as dt
+import requests
+from datetime import datetime as dt
+import subprocess
 
-from fetchers import NhkCovidDailyFetcher
+def fetch_nhk_covid_daily():
+    NHK_CSV_URL = 'https://www3.nhk.or.jp/n-data/opendata/coronavirus/nhk_news_covid19_prefectures_daily_data.csv'
 
-@dataclass
-class FetchResult:
-    path: Path
-    csv_data: pd.DataFrame
+    res = requests.get(NHK_CSV_URL, timeout=10)
+    if res.status_code != 200:
+        raise Exception(f'Status: {res.status_code}')
 
-class Tasker:
-    def __init__(self):
-        self.nhk_daily = NhkCovidDailyFetcher()
+    csv_text = res.text
 
-    def do_fetch(self, name: str, fetcher) -> FetchResult:
-        # ymd_hms = dt.now().strftime('%Y%m%d_%H%N%S')
-        dir_path = Path('./data')
-        dir_path.mkdir(exist_ok=True, parents=True)
-        path = dir_path / f'{name}.csv'
+    ymd = dt.now().strftime('%Y%m%d')
+    dir_path = Path('./data/nhk_covid_daily')
 
-        csv_text = fetcher.fetch()
+    dir_path.mkdir(parents=True, exist_ok=True)
 
-        with open(path, 'w') as fp:
-            fp.write(csv_text)
+    ymd_file = f'{ymd}.csv'
+    ymd_path = dir_path / ymd_file
+    latest_path = dir_path / 'daily.csv'
 
-        sio = StringIO(csv_text)
-        csv_data = pd.read_csv(sio)
+    with open(ymd_path, 'w') as fp:
+        fp.write(csv_text)
 
-        return FetchResult(
-            path=path,
-            csv_data=csv_data,
-        )
-
-    def do_task(self):
-        fres = self.do_fetch('nhk_covid_daily', fetcher=self.nhk_daily)
-
+    subprocess.call([ 'ln', '-sf', ymd_file, str(latest_path)])
 
 
 if __name__ == '__main__':
@@ -45,17 +34,15 @@ if __name__ == '__main__':
     parser.add_argument('--schedule', action='store_true')
     args = parser.parse_args()
 
-    tasker = Tasker()
-
     if not args.schedule:
-        tasker.do_task()
+        fetch_nhk_covid_daily()
 
     else:
         import time
         import schedule
 
         print('Execute at 17:00 everyday')
-        schedule.every().day.at('17:00').do(tasker.do_task)
+        schedule.every().day.at('17:00').do(fetch_nhk_covid_daily)
 
         while True:
             schedule.run_pending()
