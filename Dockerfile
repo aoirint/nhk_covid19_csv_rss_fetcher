@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.3-labs
-FROM python:3.9
+FROM python:3.10
 
 RUN <<EOF
     apt-get update
