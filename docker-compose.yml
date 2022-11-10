@@ -2,7 +2,7 @@ version: '3.9'
 services:
   fetcher:
     build: .
-    command: python3 main.py --schedule
+    command: gosu user python3 main.py --schedule
     restart: always
     volumes:
       - "${HOST_DATA_DIR}:/work/data"
